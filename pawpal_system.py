@@ -146,29 +146,37 @@ class Scheduler:
         """
         return [t for t in tasks if t.frequency == "daily" or (t.frequency == "weekly" and is_weekly_day)]
 
-    def detect_conflicts(self, tasks: List[Task]) -> bool:
+    def detect_conflicts(self, tasks: List[Task]) -> List[str]:
         """
-        Algorithm 4 — Conflict detection.
-        Checks two things:
-        1. Total duration exceeds available time (original check).
-        2. Any single time slot (morning/afternoon/evening) is overloaded —
-           tasks in that slot together exceed 60 minutes.
+        Algorithm 4 — Lightweight conflict detection.
+        Returns a list of warning messages (never crashes).
+        Checks:
+        1. Total duration exceeds owner's available time.
+        2. Any time slot (morning/afternoon/evening) is overloaded beyond 60 min,
+           and names which tasks are causing the clash.
         """
+        warnings = []
         total = sum(t.duration for t in tasks)
-        conflict = False
 
         if total > self.owner.available_minutes:
-            print(f"Warning: Total task time ({total} min) exceeds available time ({self.owner.available_minutes} min).")
-            conflict = True
+            warnings.append(
+                f"Total task time ({total} min) exceeds available time ({self.owner.available_minutes} min)."
+            )
 
-        # Check per time-slot overload
+        # Group tasks by time slot and check each slot
         for slot in ["morning", "afternoon", "evening"]:
-            slot_total = sum(t.duration for t in tasks if t.preferred_time == slot)
+            slot_tasks = [t for t in tasks if t.preferred_time == slot]
+            slot_total = sum(t.duration for t in slot_tasks)
             if slot_total > 60:
-                print(f"Warning: '{slot}' slot has {slot_total} min of tasks — exceeds 60 min window.")
-                conflict = True
+                names = ", ".join(t.name for t in slot_tasks)
+                warnings.append(
+                    f"'{slot}' slot overloaded: {slot_total} min across [{names}] — exceeds 60 min window."
+                )
 
-        return conflict
+        for w in warnings:
+            print(f"⚠️  Warning: {w}")
+
+        return warnings
 
     def generate_schedule(self, is_weekly_day: bool = False) -> List[Task]:
         """

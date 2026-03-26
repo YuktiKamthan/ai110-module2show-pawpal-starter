@@ -3,6 +3,21 @@ from pawpal_system import Task, Pet, Owner, Scheduler
 # --- Setup ---
 owner = Owner(name="Alex", available_minutes=90)
 
+# --- CONFLICT DETECTION DEMO ---
+print("=" * 40)
+print("CONFLICT DETECTION DEMO")
+print("=" * 40)
+conflict_pet = Pet(name="Max", species="Dog", age=2)
+# Three morning tasks totalling 80 min — will trigger slot conflict
+conflict_pet.add_task(Task(name="Long Walk",    duration=40, priority="high",   preferred_time="morning"))
+conflict_pet.add_task(Task(name="Feeding",      duration=20, priority="high",   preferred_time="morning"))
+conflict_pet.add_task(Task(name="Training",     duration=20, priority="medium", preferred_time="morning"))
+owner.add_pet(conflict_pet)
+
+scheduler_conflict = Scheduler(pet=conflict_pet, owner=owner)
+scheduler_conflict.generate_schedule()
+print()
+
 # --- Pets ---
 dog = Pet(name="Buddy", species="Dog", age=3)
 cat = Pet(name="Whiskers", species="Cat", age=5)
