@@ -73,7 +73,9 @@ The core scheduling logic is well-covered. The missing star reflects that time s
 
 ## 📸 Demo
 
-<a href="/course_images/ai110/pawpal_screenshot.png" target="_blank"><img src='/course_images/ai110/pawpal_screenshot.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>
+<a href="screenshots/pawpal Ui scrrenshot .png" target="_blank"><img src='screenshots/pawpal Ui scrrenshot .png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>
+
+<a href="screenshots/pawpal Ui screenshot 2 .png" target="_blank"><img src='screenshots/pawpal Ui screenshot 2 .png' title='PawPal App Schedule View' width='' alt='PawPal App Schedule View' class='center-block' /></a>
 
 ---
 
