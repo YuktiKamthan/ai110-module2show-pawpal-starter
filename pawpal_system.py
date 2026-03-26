@@ -44,9 +44,9 @@ class Owner:
 
 
 class Scheduler:
-    def __init__(self, pet: Pet, available_minutes: int):
+    def __init__(self, pet: Pet, owner: Owner):
         self.pet = pet
-        self.available_minutes = available_minutes
+        self.owner = owner
 
     def generate_schedule(self):
         pass
