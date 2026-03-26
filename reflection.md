@@ -79,8 +79,9 @@ Yes, one change was made during the review of the skeleton. The `Scheduler` clas
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+The scheduler uses broad time slots (morning, afternoon, evening) rather than exact start and end times. This means it can detect that a slot is overloaded in total minutes, but it cannot detect that two specific tasks at 8:00 AM and 8:15 AM literally overlap minute-by-minute.
+
+This tradeoff is reasonable for this scenario because pet owners think in terms of general time-of-day routines, not precise timestamps. A morning walk and morning feeding don't need exact scheduling — they just need to both happen in the morning. Exact-time conflict detection would add significant complexity (tracking start times, end times, sorting by clock time) without meaningful benefit for a daily pet care planner. The slot-based approach is simpler to reason about, easier to maintain, and still catches the most common problem: too many tasks crammed into one part of the day.
 
 ---
 
