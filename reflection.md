@@ -74,8 +74,9 @@ Yes, one change was made during the review of the skeleton. The `Scheduler` clas
 
 **a. Constraints and priorities**
 
-- What constraints does your scheduler consider (for example: time, priority, preferences)?
-- How did you decide which constraints mattered most?
+The scheduler considers three constraints: the owner's total available time per day (in minutes), the priority of each task (high/medium/low), and the preferred time of day (morning/afternoon/evening). It also considers task frequency — daily tasks always appear, while weekly tasks only appear when flagged.
+
+Priority was treated as the most important constraint because it reflects urgency and the pet's health needs. A missed medication is more serious than a missed playtime session. Available time was the second constraint — it acts as a hard cap. Time of day was treated as a soft preference used for ordering the final plan, not for filtering tasks out.
 
 **b. Tradeoffs**
 
@@ -89,13 +90,13 @@ This tradeoff is reasonable for this scenario because pet owners think in terms 
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+AI was used at every phase of the project. In Phase 1, it helped brainstorm the four-class architecture and generate the initial UML diagram from a plain-English description of the system. In Phase 2, it scaffolded the class skeletons and suggested using Python dataclasses for Task and Pet to reduce boilerplate. In Phase 4, it helped design the conflict detection strategy and suggested using `timedelta` for recurring task scheduling. In Phase 5, it drafted the initial test functions, which were then reviewed and extended with edge cases.
+
+The most helpful prompts were specific and context-anchored — for example, "Based on my skeletons in pawpal_system.py, how should the Scheduler retrieve all tasks from the Owner's pets?" gave a precise, usable answer, whereas vague prompts like "help me with scheduling" produced generic responses.
 
 **b. Judgment and verification**
 
-- Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+When asked to simplify `filter_by_frequency`, the AI suggested replacing the readable condition with a set union operation: `allowed = {"daily"} | ({"weekly"} if is_weekly_day else set())`. While this is more Pythonic and slightly more efficient, it requires understanding set operations — making it harder for a reader unfamiliar with Python sets to follow the logic. The original version reads almost like plain English: "keep it if it's daily, or if it's weekly and today is a weekly day." The original was kept because readability was prioritized over cleverness. The AI suggestion was verified by running both versions against the test suite — both passed — confirming the decision was a style choice, not a correctness issue.
 
 ---
 
@@ -103,13 +104,13 @@ This tradeoff is reasonable for this scenario because pet owners think in terms 
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
+The test suite covers 14 behaviors across two categories. Happy paths include: task completion changing status, adding a task increasing the pet's count, daily and weekly recurrence producing correct next due dates, the auto-addition of the next task occurrence, time-of-day sorting, pending task filtering, conflict detection warnings, and weekly tasks being excluded on non-weekly days. Edge cases include: generating a schedule for a pet with no tasks, skipping a task that exceeds available time, filtering when all tasks are complete, completing a non-existent task name, and calling get_all_tasks on an owner with no pets.
+
+These tests matter because they verify both the intended behavior and the system's ability to handle mistakes gracefully without crashing.
 
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+Confidence level: 4/5. The core scheduling pipeline — priority sorting, time-of-day ordering, conflict detection, and recurring task logic — is fully covered. The gap is exact-timestamp conflict detection: two tasks in the same broad slot (e.g., both "morning") are warned about collectively, but the system doesn't calculate whether they literally overlap minute by minute. If given more time, the next tests would cover: an owner with multiple pets generating one combined schedule, tasks with identical names on the same pet, and scheduling behavior when available time is exactly zero.
 
 ---
 
@@ -117,12 +118,12 @@ This tradeoff is reasonable for this scenario because pet owners think in terms 
 
 **a. What went well**
 
-- What part of this project are you most satisfied with?
+The CLI-first workflow was the most effective part of the process. By building and verifying all logic in `pawpal_system.py` and `main.py` before connecting the UI, every Streamlit button had a proven, tested method behind it. This meant the UI integration in Phase 3 was straightforward — it was just wiring, not debugging. The test suite also caught a real design issue early: `mark_complete()` originally returned nothing, but the recurring task feature required it to return the next Task object. The tests made that gap visible immediately.
 
 **b. What you would improve**
 
-- If you had another iteration, what would you improve or redesign?
+The biggest improvement would be supporting multiple active pets in a single schedule view. Currently the Scheduler works one pet at a time. A real owner with two dogs and a cat wants to see the full day across all pets in one organized plan. This would require the Scheduler to accept an Owner directly (instead of a single Pet), group tasks by pet, and handle the shared time budget across all animals.
 
 **c. Key takeaway**
 
-- What is one important thing you learned about designing systems or working with AI on this project?
+The most important lesson was that AI is most valuable when you already have a clear design. When prompts were vague, the AI produced generic code. When prompts referenced specific files, classes, and constraints, the output was precise and usable. Acting as the lead architect — making the structural decisions first, then using AI to fill in the implementation — produced a cleaner system than if AI had been asked to design everything from scratch. The human role is not to write every line, but to define the boundaries and verify the results.
