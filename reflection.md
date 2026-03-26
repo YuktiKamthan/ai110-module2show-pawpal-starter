@@ -1,72 +1,36 @@
 # PawPal+ Project Reflection
 
+---
+
 ## 1. System Design
 
 **a. Initial design**
 
-The three core actions a user should be able to perform in PawPal+:
+Three core actions the user can perform:
 
-1. **Add a pet** — The user enters basic information about their pet (name, species, age). This is the foundation of the system; all tasks and schedules are tied to a specific pet.
+1. **Add a pet** — Enter pet info (name, species, age). Everything in the app is tied to a pet.
+2. **Add care tasks** — Create tasks like feeding, walks, or medication, each with a duration and priority.
+3. **Generate a daily schedule** — The system organizes tasks by priority and available time, and explains what fits and what doesn't.
 
-2. **Add and edit care tasks** — The user creates tasks such as feeding, walks, medications, or grooming. Each task has a duration and a priority level so the scheduler knows what matters most.
+The system is built around four classes:
 
-3. **Generate a daily schedule** — The user requests a daily plan. The system organizes tasks based on priority and the owner's available time, then displays the plan with a brief explanation of its reasoning.
+- **Owner** — Stores the owner's name and available time per day. Manages a list of pets.
+- **Pet** — Stores pet details and holds a list of care tasks.
+- **Task** — Represents one care activity with name, duration, priority, time of day, frequency, and due date.
+- **Scheduler** — The brain. Takes a pet and owner, sorts tasks by priority, fits them within available time, and warns about conflicts.
 
-The system is built around four main classes:
-
-- **Owner**: Holds the owner's name and available time per day (in minutes). Can add pets and view all their pets.
-- **Pet**: Holds the pet's name, species, age, and a list of care tasks. Can add and remove tasks.
-- **Task**: Holds the task name, duration (in minutes), priority (high/medium/low), and preferred time of day (morning/afternoon/evening). Can display its own details.
-- **Scheduler**: Takes a Pet and an Owner's available time and generates a prioritized daily plan. It sorts tasks by priority and detects conflicts (tasks that exceed available time).
-
-Relationships: An Owner has one or more Pets. A Pet has a list of Tasks. The Scheduler uses both the Pet and the Owner to produce the daily plan.
-
-UML diagram (Mermaid.js):
-
-```mermaid
-classDiagram
-    class Owner {
-        +String name
-        +int available_minutes
-        +add_pet(pet)
-        +view_pets()
-    }
-
-    class Pet {
-        +String name
-        +String species
-        +int age
-        +List tasks
-        +add_task(task)
-        +remove_task(task)
-        +view_tasks()
-    }
-
-    class Task {
-        +String name
-        +int duration
-        +String priority
-        +String preferred_time
-        +display()
-    }
-
-    class Scheduler {
-        +Pet pet
-        +int available_minutes
-        +generate_schedule()
-        +sort_by_priority()
-        +detect_conflicts()
-    }
-
-    Owner "1" --> "1..*" Pet : owns
-    Pet "1" --> "0..*" Task : has
-    Scheduler --> Pet : uses
-    Scheduler --> Owner : uses
-```
+Relationships:
+- Owner → owns → Pet(s)
+- Pet → has → Tasks
+- Scheduler → uses → Pet + Owner to build the daily plan
 
 **b. Design changes**
 
-Yes, one change was made during the review of the skeleton. The `Scheduler` class originally accepted `available_minutes` as a plain integer. This was changed so that `Scheduler` takes the full `Owner` object instead. This means the Scheduler can access `owner.available_minutes` directly and will always stay in sync if the owner's available time changes. Passing just a number was a bottleneck — it disconnected the Scheduler from the Owner and could cause inconsistencies.
+One change was made after reviewing the skeleton:
+
+- **Original:** `Scheduler(pet, available_minutes)` — passed time as a plain number
+- **Changed to:** `Scheduler(pet, owner)` — passes the full Owner object
+- **Why:** The Scheduler can now always read `owner.available_minutes` directly. Passing just a number disconnected the Scheduler from the Owner and could cause inconsistencies if the owner's time was updated later.
 
 ---
 
@@ -74,43 +38,88 @@ Yes, one change was made during the review of the skeleton. The `Scheduler` clas
 
 **a. Constraints and priorities**
 
-The scheduler considers three constraints: the owner's total available time per day (in minutes), the priority of each task (high/medium/low), and the preferred time of day (morning/afternoon/evening). It also considers task frequency — daily tasks always appear, while weekly tasks only appear when flagged.
+The scheduler considers three constraints:
 
-Priority was treated as the most important constraint because it reflects urgency and the pet's health needs. A missed medication is more serious than a missed playtime session. Available time was the second constraint — it acts as a hard cap. Time of day was treated as a soft preference used for ordering the final plan, not for filtering tasks out.
+- **Priority (high / medium / low)** — Most important. High-priority tasks always get scheduled first. A missed medication matters more than a missed playtime.
+- **Available time** — Acts as a hard cap. Tasks are added greedily until time runs out.
+- **Time of day (morning / afternoon / evening)** — A soft preference used to sort the final plan so it flows naturally through the day.
+- **Frequency (daily / weekly)** — Weekly tasks are hidden on non-weekly days to avoid clutter.
 
 **b. Tradeoffs**
 
-The scheduler uses broad time slots (morning, afternoon, evening) rather than exact start and end times. This means it can detect that a slot is overloaded in total minutes, but it cannot detect that two specific tasks at 8:00 AM and 8:15 AM literally overlap minute-by-minute.
+The scheduler uses broad time slots (morning, afternoon, evening) instead of exact start and end times.
 
-This tradeoff is reasonable for this scenario because pet owners think in terms of general time-of-day routines, not precise timestamps. A morning walk and morning feeding don't need exact scheduling — they just need to both happen in the morning. Exact-time conflict detection would add significant complexity (tracking start times, end times, sorting by clock time) without meaningful benefit for a daily pet care planner. The slot-based approach is simpler to reason about, easier to maintain, and still catches the most common problem: too many tasks crammed into one part of the day.
+- **What this means:** It can warn that a slot is overloaded in total minutes, but it can't detect that two tasks literally overlap at 8:00 AM and 8:15 AM.
+- **Why it's okay:** Pet owners think in routines, not timestamps. A morning walk and morning feeding just need to both happen in the morning — exact times don't matter.
+- **Benefit:** Much simpler to build, easier to understand, and still catches the most common problem — too many tasks in one part of the day.
 
 ---
 
 ## 3. AI Collaboration
 
-**a. How you used AI**
+**a. How I used AI**
 
-AI was used at every phase of the project. In Phase 1, it helped brainstorm the four-class architecture and generate the initial UML diagram from a plain-English description of the system. In Phase 2, it scaffolded the class skeletons and suggested using Python dataclasses for Task and Pet to reduce boilerplate. In Phase 4, it helped design the conflict detection strategy and suggested using `timedelta` for recurring task scheduling. In Phase 5, it drafted the initial test functions, which were then reviewed and extended with edge cases.
+AI was involved at every phase:
 
-The most helpful prompts were specific and context-anchored — for example, "Based on my skeletons in pawpal_system.py, how should the Scheduler retrieve all tasks from the Owner's pets?" gave a precise, usable answer, whereas vague prompts like "help me with scheduling" produced generic responses.
+- **Phase 1** — Brainstormed the four-class architecture and generated the UML diagram from a plain-English description.
+- **Phase 2** — Scaffolded class skeletons and suggested using Python dataclasses for Task and Pet to reduce boilerplate.
+- **Phase 4** — Helped design conflict detection and suggested using `timedelta` for recurring task scheduling.
+- **Phase 5** — Drafted initial test functions, which were then reviewed and extended with edge cases.
 
-**b. Judgment and verification**
+The most helpful prompts were **specific and file-anchored** — for example:
+> "Based on my skeletons in pawpal_system.py, how should the Scheduler retrieve all tasks from the Owner's pets?"
 
-When asked to simplify `filter_by_frequency`, the AI suggested replacing the readable condition with a set union operation: `allowed = {"daily"} | ({"weekly"} if is_weekly_day else set())`. While this is more Pythonic and slightly more efficient, it requires understanding set operations — making it harder for a reader unfamiliar with Python sets to follow the logic. The original version reads almost like plain English: "keep it if it's daily, or if it's weekly and today is a weekly day." The original was kept because readability was prioritized over cleverness. The AI suggestion was verified by running both versions against the test suite — both passed — confirming the decision was a style choice, not a correctness issue.
+Vague prompts like "help me with scheduling" produced generic, unusable responses.
+
+**b. One moment I didn't accept the AI suggestion**
+
+For `filter_by_frequency`, the AI suggested:
+```python
+allowed = {"daily"} | ({"weekly"} if is_weekly_day else set())
+return [t for t in tasks if t.frequency in allowed]
+```
+
+This is more Pythonic but harder to read if you don't know set operations. The original version was kept:
+```python
+return [t for t in tasks if t.frequency == "daily" or (t.frequency == "weekly" and is_weekly_day)]
+```
+
+Both versions passed all tests — so the decision came down to readability over cleverness. The readable version won.
 
 ---
 
 ## 4. Testing and Verification
 
-**a. What you tested**
+**a. What I tested**
 
-The test suite covers 14 behaviors across two categories. Happy paths include: task completion changing status, adding a task increasing the pet's count, daily and weekly recurrence producing correct next due dates, the auto-addition of the next task occurrence, time-of-day sorting, pending task filtering, conflict detection warnings, and weekly tasks being excluded on non-weekly days. Edge cases include: generating a schedule for a pet with no tasks, skipping a task that exceeds available time, filtering when all tasks are complete, completing a non-existent task name, and calling get_all_tasks on an owner with no pets.
+14 tests across two categories:
 
-These tests matter because they verify both the intended behavior and the system's ability to handle mistakes gracefully without crashing.
+**Happy paths:**
+- Task completion changes status to Done
+- Adding a task increases the pet's task count
+- Daily task reschedules for tomorrow after completion
+- Weekly task reschedules 7 days out after completion
+- Completing a task auto-adds the next occurrence
+- Tasks sort correctly morning → afternoon → evening
+- Pending task filter returns only incomplete tasks
+- Conflict detection fires when a slot is overloaded
+- Weekly tasks excluded on non-weekly days
 
-**b. Confidence**
+**Edge cases:**
+- Pet with no tasks returns an empty schedule (no crash)
+- Task longer than available time is skipped gracefully
+- Filter returns empty when all tasks are completed
+- Completing a non-existent task name doesn't crash
+- Owner with no pets returns an empty task list
 
-Confidence level: 4/5. The core scheduling pipeline — priority sorting, time-of-day ordering, conflict detection, and recurring task logic — is fully covered. The gap is exact-timestamp conflict detection: two tasks in the same broad slot (e.g., both "morning") are warned about collectively, but the system doesn't calculate whether they literally overlap minute by minute. If given more time, the next tests would cover: an owner with multiple pets generating one combined schedule, tasks with identical names on the same pet, and scheduling behavior when available time is exactly zero.
+**b. Confidence level: ⭐⭐⭐⭐ (4/5)**
+
+The core pipeline is well covered. The missing star is for exact-timestamp conflict detection — two tasks in the same broad slot are warned about collectively, but minute-by-minute overlap isn't calculated. That's a known tradeoff, not a bug.
+
+Next tests I'd add:
+- One combined schedule across multiple pets
+- Tasks with identical names on the same pet
+- Scheduling when available time is exactly zero
 
 ---
 
@@ -118,12 +127,17 @@ Confidence level: 4/5. The core scheduling pipeline — priority sorting, time-o
 
 **a. What went well**
 
-The CLI-first workflow was the most effective part of the process. By building and verifying all logic in `pawpal_system.py` and `main.py` before connecting the UI, every Streamlit button had a proven, tested method behind it. This meant the UI integration in Phase 3 was straightforward — it was just wiring, not debugging. The test suite also caught a real design issue early: `mark_complete()` originally returned nothing, but the recurring task feature required it to return the next Task object. The tests made that gap visible immediately.
+The **CLI-first workflow** was the best decision made early on. All logic was built and verified in `pawpal_system.py` and `main.py` before any UI work began. This meant connecting the Streamlit UI was just wiring — no debugging of core logic in the browser. The test suite also caught a real gap early: `mark_complete()` originally returned nothing, but recurring tasks required it to return the next Task object. The tests made that visible before it became a bug in the UI.
 
-**b. What you would improve**
+**b. What I would improve**
 
-The biggest improvement would be supporting multiple active pets in a single schedule view. Currently the Scheduler works one pet at a time. A real owner with two dogs and a cat wants to see the full day across all pets in one organized plan. This would require the Scheduler to accept an Owner directly (instead of a single Pet), group tasks by pet, and handle the shared time budget across all animals.
+Supporting **multiple pets in one schedule view**. Right now the Scheduler works one pet at a time. A real owner with two dogs and a cat wants to see the full day across all pets in one plan. This would mean:
+- Scheduler accepts an Owner instead of a single Pet
+- Tasks are grouped by pet
+- Time budget is shared across all animals
 
 **c. Key takeaway**
 
-The most important lesson was that AI is most valuable when you already have a clear design. When prompts were vague, the AI produced generic code. When prompts referenced specific files, classes, and constraints, the output was precise and usable. Acting as the lead architect — making the structural decisions first, then using AI to fill in the implementation — produced a cleaner system than if AI had been asked to design everything from scratch. The human role is not to write every line, but to define the boundaries and verify the results.
+AI is most useful when **you already have a clear design**. Vague prompts produce generic code. Specific prompts referencing actual files and constraints produce precise, usable output.
+
+The role of the human isn't to write every line — it's to define the boundaries, make the architectural decisions, and verify the results. That's what "lead architect" actually means when working with AI.

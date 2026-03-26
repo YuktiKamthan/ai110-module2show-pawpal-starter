@@ -79,6 +79,13 @@ The core scheduling logic is well-covered. The missing star reflects that time s
 
 ---
 
+## Author
+
+**Yukti Kamthan**
+[LinkedIn](https://www.linkedin.com/in/yuktikamthan)
+
+---
+
 ## Getting Started
 
 ### Setup
