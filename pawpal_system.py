@@ -36,6 +36,7 @@ class Task:
         )
 
     def display(self):
+        """Print a formatted one-line summary of this task."""
         status = "Done" if self.completed else "Pending"
         print(f"[{self.priority.upper()}] {self.name} | {self.duration} min | {self.preferred_time} | {self.frequency} | due {self.due_date} | {status}")
 
@@ -48,10 +49,12 @@ class Pet:
     tasks: List[Task] = field(default_factory=list)
 
     def add_task(self, task: Task):
+        """Append a Task to this pet's task list."""
         self.tasks.append(task)
         print(f"Task '{task.name}' added for {self.name}.")
 
     def remove_task(self, task_name: str):
+        """Remove all tasks matching task_name from this pet's list."""
         self.tasks = [t for t in self.tasks if t.name != task_name]
         print(f"Task '{task_name}' removed from {self.name}.")
 
@@ -69,6 +72,7 @@ class Pet:
         print(f"No pending task named '{task_name}' found for {self.name}.")
 
     def view_tasks(self):
+        """Print all tasks for this pet."""
         if not self.tasks:
             print(f"{self.name} has no tasks.")
         else:
@@ -84,10 +88,12 @@ class Owner:
         self.pets: List[Pet] = []
 
     def add_pet(self, pet: Pet):
+        """Register a Pet under this owner."""
         self.pets.append(pet)
         print(f"Pet '{pet.name}' added for owner {self.name}.")
 
     def view_pets(self):
+        """Print a summary of all pets owned."""
         if not self.pets:
             print(f"{self.name} has no pets.")
         else:
