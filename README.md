@@ -41,6 +41,22 @@ PawPal+ goes beyond a simple task list with four algorithmic features:
 - **Recurring task automation** — Daily tasks reschedule for the next day when marked complete. Weekly tasks (grooming, vet visits) reschedule 7 days out and are hidden on non-weekly days to avoid clutter.
 - **Conflict detection** — The scheduler warns if total task time exceeds the owner's available time, or if any single time slot (morning/afternoon/evening) is overloaded beyond 60 minutes — and names the specific tasks causing the clash.
 
+## Testing PawPal+
+
+Run the full test suite with:
+
+```bash
+python -m pytest
+```
+
+The 14 tests cover:
+
+- **Happy paths** — task completion, adding pets/tasks, sorting, filtering, recurring scheduling, conflict detection
+- **Edge cases** — empty pet (no tasks), task too long to fit, all tasks already completed, completing a non-existent task, owner with no pets
+
+**Confidence level: ⭐⭐⭐⭐ (4/5)**
+The core scheduling logic is well-covered. The missing star reflects that time slots are broad (morning/afternoon/evening) rather than exact timestamps, so minute-level overlaps are not tested. That's a known tradeoff, not a bug.
+
 ### Suggested workflow
 
 1. Read the scenario carefully and identify requirements and edge cases.
