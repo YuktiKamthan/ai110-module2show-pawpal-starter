@@ -4,8 +4,65 @@
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+The three core actions a user should be able to perform in PawPal+:
+
+1. **Add a pet** — The user enters basic information about their pet (name, species, age). This is the foundation of the system; all tasks and schedules are tied to a specific pet.
+
+2. **Add and edit care tasks** — The user creates tasks such as feeding, walks, medications, or grooming. Each task has a duration and a priority level so the scheduler knows what matters most.
+
+3. **Generate a daily schedule** — The user requests a daily plan. The system organizes tasks based on priority and the owner's available time, then displays the plan with a brief explanation of its reasoning.
+
+The system is built around four main classes:
+
+- **Owner**: Holds the owner's name and available time per day (in minutes). Can add pets and view all their pets.
+- **Pet**: Holds the pet's name, species, age, and a list of care tasks. Can add and remove tasks.
+- **Task**: Holds the task name, duration (in minutes), priority (high/medium/low), and preferred time of day (morning/afternoon/evening). Can display its own details.
+- **Scheduler**: Takes a Pet and an Owner's available time and generates a prioritized daily plan. It sorts tasks by priority and detects conflicts (tasks that exceed available time).
+
+Relationships: An Owner has one or more Pets. A Pet has a list of Tasks. The Scheduler uses both the Pet and the Owner to produce the daily plan.
+
+UML diagram (Mermaid.js):
+
+```mermaid
+classDiagram
+    class Owner {
+        +String name
+        +int available_minutes
+        +add_pet(pet)
+        +view_pets()
+    }
+
+    class Pet {
+        +String name
+        +String species
+        +int age
+        +List tasks
+        +add_task(task)
+        +remove_task(task)
+        +view_tasks()
+    }
+
+    class Task {
+        +String name
+        +int duration
+        +String priority
+        +String preferred_time
+        +display()
+    }
+
+    class Scheduler {
+        +Pet pet
+        +int available_minutes
+        +generate_schedule()
+        +sort_by_priority()
+        +detect_conflicts()
+    }
+
+    Owner "1" --> "1..*" Pet : owns
+    Pet "1" --> "0..*" Task : has
+    Scheduler --> Pet : uses
+    Scheduler --> Owner : uses
+```
 
 **b. Design changes**
 
