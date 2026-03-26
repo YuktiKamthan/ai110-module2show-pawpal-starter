@@ -99,3 +99,50 @@ def test_weekly_tasks_excluded_on_non_weekly_day():
     names = [t.name for t in schedule]
     assert "Feeding" in names
     assert "Grooming" not in names
+
+
+# --- Edge Cases ---
+
+def test_generate_schedule_with_no_tasks_returns_empty():
+    """A pet with no tasks should produce an empty schedule without crashing."""
+    owner = Owner("Alex", 90)
+    pet = Pet("Buddy", "Dog", 3)
+    scheduler = Scheduler(pet=pet, owner=owner)
+    schedule = scheduler.generate_schedule()
+    assert schedule == []
+
+
+def test_task_too_long_is_skipped():
+    """A task longer than available time should be skipped, not crash."""
+    owner = Owner("Alex", 20)
+    pet = Pet("Buddy", "Dog", 3)
+    pet.add_task(Task(name="Long Walk", duration=60, priority="high", preferred_time="morning"))
+    scheduler = Scheduler(pet=pet, owner=owner)
+    schedule = scheduler.generate_schedule()
+    assert schedule == []
+
+
+def test_filter_returns_empty_when_all_tasks_completed():
+    """get_filtered_tasks(completed=False) returns empty if every task is done."""
+    owner = Owner("Alex", 90)
+    pet = Pet("Buddy", "Dog", 3)
+    task = Task(name="Walk", duration=30, priority="high", preferred_time="morning")
+    task.mark_complete()
+    pet.add_task(task)
+    owner.add_pet(pet)
+    pending = owner.get_filtered_tasks(completed=False)
+    assert pending == []
+
+
+def test_complete_nonexistent_task_does_not_crash():
+    """Completing a task name that doesn't exist should not raise an error."""
+    pet = Pet("Buddy", "Dog", 3)
+    pet.add_task(Task(name="Walk", duration=30, priority="high", preferred_time="morning"))
+    pet.complete_task("Nonexistent Task")  # should print a warning, not crash
+    assert len(pet.tasks) == 1  # original task unchanged
+
+
+def test_get_all_tasks_with_no_pets_returns_empty():
+    """An owner with no pets should return an empty task list."""
+    owner = Owner("Alex", 90)
+    assert owner.get_all_tasks() == []
