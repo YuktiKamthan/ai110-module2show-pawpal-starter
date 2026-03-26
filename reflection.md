@@ -63,6 +63,7 @@ AI was involved at every phase:
 
 - **Phase 1** — Brainstormed the four-class architecture and generated the UML diagram from a plain-English description.
 - **Phase 2** — Scaffolded class skeletons and suggested using Python dataclasses for Task and Pet to reduce boilerplate.
+- **Phase 3** — Helped wire the backend logic to the Streamlit UI by explaining how `st.session_state` works and how to persist objects across reruns.
 - **Phase 4** — Helped design conflict detection and suggested using `timedelta` for recurring task scheduling.
 - **Phase 5** — Drafted initial test functions, which were then reviewed and extended with edge cases.
 
